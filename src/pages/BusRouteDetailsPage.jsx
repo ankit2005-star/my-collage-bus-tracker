@@ -32,8 +32,7 @@ const busRoutes = [
 const BusRouteDetailsPage = () => {
   return (
     <div className="flex flex-col min-h-screen overflow-x-hidden bg-gray-900 text-white">
-      {/* Header */}
-      <Header />
+      
 
       {/* Main Content */}
       <div className="flex-grow flex flex-col items-center justify-center px-4 py-16">
@@ -68,8 +67,7 @@ const BusRouteDetailsPage = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <Footer />
+      
     </div>
   );
 };

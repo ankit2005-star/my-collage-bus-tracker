@@ -10,8 +10,7 @@ const HomePage = () => {
 
   return (
     <div className="flex flex-col min-h-screen overflow-x-hidden bg-gray-100 dark:bg-gray-900">
-      {/* Header */}
-      <Header />
+       
 
       {/* Main Content */}
       <div className="flex-grow flex items-center justify-center px-4 py-10">
@@ -62,9 +61,7 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <Footer />
+ 
     </div>
   );
 };

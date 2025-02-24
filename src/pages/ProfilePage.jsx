@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
 
 const DEFAULT_AVATAR = "https://via.placeholder.com/150";
 
@@ -9,15 +8,19 @@ const ProfilePage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  if (!user) {
-    navigate("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
 
   const storedPhoto = localStorage.getItem("profileImage");
-  const [name, setName] = useState(user.displayName || "");
+  const storedName =
+    localStorage.getItem("profileName") || user?.displayName || "User";
+
+  const [name, setName] = useState(storedName);
   const [photoURL, setPhotoURL] = useState(
-    storedPhoto || user.photoURL || DEFAULT_AVATAR
+    storedPhoto || user?.photoURL || DEFAULT_AVATAR
   );
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -43,7 +46,6 @@ const ProfilePage = () => {
   const handleUpdateProfile = () => {
     setUploading(true);
     localStorage.setItem("profileName", name);
-    localStorage.setItem("profileImage", photoURL);
     alert("Profile updated successfully!");
     setIsEditing(false);
     setUploading(false);
@@ -60,10 +62,10 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gradient-to-b from-blue-50 to-blue-100">
-      <Header />
-      <div className="w-full max-w-sm bg-white shadow-lg rounded-xl p-6 text-center">
-        <div className="relative w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden border-4 border-blue-500">
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gradient-to-b from-[#1e293b] to-[#334155] text-white">
+      <div className="w-full max-w-md bg-[#1e293b] shadow-lg rounded-lg p-6 text-center border border-[#64748b]">
+        {/* Profile Picture */}
+        <div className="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-[#0ea5e9]">
           <img
             src={photoURL}
             alt="Profile"
@@ -71,11 +73,11 @@ const ProfilePage = () => {
           />
           <label
             htmlFor="fileInput"
-            className="absolute bottom-2 right-2 bg-white p-1 rounded-full shadow-md cursor-pointer"
+            className="absolute bottom-1 right-1 bg-[#0ea5e9] p-2 rounded-full shadow-md cursor-pointer"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-gray-700"
+              className="h-4 w-4 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -95,49 +97,49 @@ const ProfilePage = () => {
             className="hidden"
           />
         </div>
+
+        {/* Name Input */}
         {isEditing ? (
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="border p-2 rounded-md w-full mt-2"
+            className="border border-[#64748b] p-2 rounded-md w-full bg-[#334155] text-white"
             placeholder="Enter new name"
           />
         ) : (
-          <h2 className="text-xl font-bold">
-            {name || user.displayName || "User"}
-          </h2>
+          <h2 className="text-xl font-semibold">{name}</h2>
         )}
-       
+
+        {/* Action Buttons */}
         <div className="mt-4 flex flex-col gap-3">
           {isEditing ? (
             <>
               <button
                 onClick={handleUpdateProfile}
-                className="w-full px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600 transition-all"
+                className="w-full px-4 py-2 bg-[#0ea5e9] text-white rounded-lg hover:bg-[#0284c7] transition-all"
                 disabled={uploading}
               >
                 {uploading ? "Updating..." : "Save Changes"}
               </button>
               <button
                 onClick={handleRemoveProfilePicture}
-                className="w-full px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600 transition-all"
+                className="w-full px-4 py-2 bg-[#dc2626] text-white rounded-lg hover:bg-[#b91c1c] transition-all"
               >
                 Remove Profile Picture
               </button>
-              
             </>
           ) : (
             <button
               onClick={() => setIsEditing(true)}
-              className="w-full px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-all"
+              className="w-full px-4 py-2 bg-[#0ea5e9] text-white rounded-lg hover:bg-[#0284c7] transition-all"
             >
               Edit Profile
             </button>
           )}
           <button
             onClick={handleLogout}
-            className="w-full px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600 transition-all"
+            className="w-full px-4 py-2 bg-[#dc2626] text-white rounded-lg hover:bg-[#b91c1c] transition-all"
           >
             Logout
           </button>

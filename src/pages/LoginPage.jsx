@@ -36,8 +36,7 @@ const LoginPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white overflow-x-hidden">
-      {/* Header */}
-      <Header />
+      
 
       {/* Main Content */}
       <div className="flex-grow flex items-center justify-center px-4 py-10">
@@ -111,8 +110,7 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <Footer />
+      
     </div>
   );
 };

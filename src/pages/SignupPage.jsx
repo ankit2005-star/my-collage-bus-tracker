@@ -63,8 +63,7 @@ const SignupPage = () => {
 
   return (
     <div className="h-screen flex flex-col bg-gray-900 text-gray-200">
-      {/* Header */}
-      <Header />
+      
 
       {/* Main Content */}
       <div className="flex-grow flex flex-col items-center justify-center px-4">
@@ -157,8 +156,7 @@ const SignupPage = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <Footer />
+      
     </div>
   );
 };

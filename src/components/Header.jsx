@@ -77,7 +77,7 @@ const Header = () => {
                   <Bell size={20} /> Notifications
                 </Link>
                 <Link
-                  to="/help"
+                  to="/help-support"
                   className="flex items-center gap-1 hover:text-gray-300"
                 >
                   <HelpCircle size={20} /> Help
@@ -167,7 +167,7 @@ const Header = () => {
                   <Bell size={24} /> Notifications
                 </Link>
                 <Link
-                  to="/help"
+                  to="/help-support"
                   onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-2 text-lg hover:text-gray-300"
                 >
