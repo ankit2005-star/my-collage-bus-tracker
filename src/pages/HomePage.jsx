@@ -14,8 +14,8 @@ const HomePage = () => {
       <Header />
 
       {/* Main Content */}
-      <div className="flex-grow flex items-center justify-center px-4 py-16">
-        <div className="w-full max-w-2xl bg-black text-white dark:bg-gray-800 shadow-2xl rounded-xl p-8 text-center backdrop-blur-lg border border-yellow-400">
+      <div className="flex-grow flex items-center justify-center px-4 py-10">
+        <div className="w-full max-w-3xl  bg-black text-white dark:bg-gray-800 shadow-2xl rounded-xl p-8 text-center backdrop-blur-lg border border-yellow-400">
           {/* Title */}
           <h1 className="text-4xl font-bold text-yellow-400 leading-relaxed">
             SCHOOL BUS TRACKING SYSTEM 🚍
