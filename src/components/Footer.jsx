@@ -1,6 +1,6 @@
 const Footer = () => {
   return (
-    <footer className="bg-gray-800 text-white py-4 w-screen">
+    <footer className="bg-gray-800  text-white py-4 w-screen">
       <div className="text-center">
         <p className="text-sm">© 2025 Bus Tracker. All rights reserved.</p>
         <div className="mt-2 space-x-4">

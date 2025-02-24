@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Ignore dependencies and build files
+node_modules/
+dist/
+
+# Firebase & backend files
+firebase.json
+firestore.rules
+firestore.indexes.json
+storage.rules
+functions/
+
+# VS Code settings
+.vscode/
+
+# Generated files
+dataconnect-generated/

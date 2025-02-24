@@ -1,74 +1,71 @@
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
-import { useState, useEffect } from "react";
+import Footer from "../components/Footer.jsx";
+import { FiMap, FiBell, FiHelpCircle, FiList } from "react-icons/fi";
 
 const HomePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-   
-
-   
-
   return (
-    <>
+    <div className="flex flex-col min-h-screen overflow-x-hidden bg-gray-100 dark:bg-gray-900">
+      {/* Header */}
       <Header />
-      <div className="flex flex-col w-screen items-center justify-center min-h-screen bg-gray-50">
-        {/* Header */}
 
-        
-
-        {/* Main Content */}
-        <div className="text-center flex w-full py-8 px-6 max-w-lg mx-auto bg-white shadow-lg rounded-lg">
-          {/* IIIT Bhopal Logo */}
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQMP45F9ue9118LZo84ecDlBrU7jynMl3lVA&s"
-            alt="IIIT Bhopal Logo"
-            className=" mx-auto mb-4"
-          />
-
-          <h1 className="text-4xl font-semibold text-indigo-600 mb-4">
-            Welcome to Bus Tracker 🚍
+      {/* Main Content */}
+      <div className="flex-grow flex items-center justify-center px-4 py-16">
+        <div className="w-full max-w-2xl bg-black text-white dark:bg-gray-800 shadow-2xl rounded-xl p-8 text-center backdrop-blur-lg border border-yellow-400">
+          {/* Title */}
+          <h1 className="text-4xl font-bold text-yellow-400 leading-relaxed">
+            SCHOOL BUS TRACKING SYSTEM 🚍
           </h1>
-
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-300 text-base md:text-lg">
             Get real-time updates on bus locations and schedules.
           </p>
 
-          {/* Action Buttons */}
-          <div className="space-y-4">
-            <button
+          {/* Action Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-6">
+            <div
               onClick={() => navigate("/bus-tracking")}
-              className="w-full py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105"
+              className="flex flex-col items-center p-6 bg-yellow-400 text-black rounded-lg shadow-lg hover:bg-yellow-500 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
             >
-              Track Bus
-            </button>
+              <FiMap className="text-5xl mb-3" />
+              <span className="text-lg font-semibold">Track Bus</span>
+            </div>
 
-            <button
+            <div
               onClick={() => navigate("/bus-route-details")}
-              className="w-full py-3 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105"
+              className="flex flex-col items-center p-6 bg-gray-700 text-white rounded-lg shadow-lg hover:bg-gray-700 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
             >
-              View Bus Routes & Schedule
-            </button>
+              <FiList className="text-5xl mb-3" />
+              <span className="text-lg font-semibold">
+                Bus Routes & Schedule
+              </span>
+            </div>
 
-            <button
+            <div
               onClick={() => navigate("/notifications")}
-              className="w-full py-3 bg-yellow-500 text-white rounded-lg shadow-md hover:bg-yellow-600 transition duration-300 ease-in-out transform hover:scale-105"
+              className="flex flex-col items-center p-6 bg-gray-700 text-white rounded-lg shadow-lg hover:bg-gray-700 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
             >
-              Check Notifications
-            </button>
+              <FiBell className="text-5xl mb-3" />
+              <span className="text-lg font-semibold">Check Notifications</span>
+            </div>
 
-            <button
+            <div
               onClick={() => navigate("/help-support")}
-              className="w-full py-3 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition duration-300 ease-in-out transform hover:scale-105"
+              className="flex flex-col items-center p-6 bg-yellow-400 text-black rounded-lg shadow-lg hover:bg-yellow-500 transition duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
             >
-              Help & Support
-            </button>
+              <FiHelpCircle className="text-5xl mb-3" />
+              <span className="text-lg font-semibold">Help & Support</span>
+            </div>
           </div>
         </div>
       </div>
-    </>
+
+      {/* Footer */}
+      <Footer />
+    </div>
   );
 };
 
