@@ -39,9 +39,9 @@ const BusRouteDetailsPage = () => {
       <div className="flex-grow flex flex-col items-center justify-center px-4 py-16 relative">
         <h2 className="text-3xl font-bold text-yellow-400 text-center mb-6 relative">
           <motion.span
-            initial={{ x: 80 }} // Start from the right
-            animate={{ x: -10 }} // Move towards the left
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            initial={{ x: 400 }} // Start from the right
+            animate={{ x: -60 }} // Move towards the left
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             className="inline-block text-4xl mx-2"
           >
             🚌
@@ -76,7 +76,7 @@ const BusRouteDetailsPage = () => {
         </div>
       </div>
       
-      <Footer />
+      
     </div>
   );
 };
