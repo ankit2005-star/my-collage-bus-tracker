@@ -17,7 +17,7 @@ const HomePage = () => {
         <div className="w-full max-w-3xl  bg-black text-white dark:bg-gray-800 shadow-2xl rounded-xl p-8 text-center backdrop-blur-lg border border-yellow-400">
           {/* Title */}
           <h1 className="text-4xl font-bold text-yellow-400 leading-relaxed">
-            SCHOOL BUS TRACKING SYSTEM 🚍
+            COLLEGE BUS TRACKING SYSTEM 🚍
           </h1>
           <p className="text-gray-300 text-base md:text-lg">
             Get real-time updates on bus locations and schedules.
@@ -67,3 +67,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
