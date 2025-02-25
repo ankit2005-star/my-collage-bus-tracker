@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
@@ -9,7 +10,7 @@ const busRoutes = [
     start: "Main Gate",
     end: "Hostel Block",
     stops: ["Library", "Cafeteria", "Sports Complex"],
-    timing: "7:30 AM - 9:00 PM",
+    timing: "7:30 AM - 6:00 PM",
   },
   {
     id: 2,
@@ -17,7 +18,7 @@ const busRoutes = [
     start: "Admin Block",
     end: "City Center",
     stops: ["Lecture Hall 1", "Gate No. 2", "Railway Station"],
-    timing: "6:30 AM - 8:30 PM",
+    timing: "6:30 AM - 05:30 PM",
   },
   {
     id: 3,
@@ -25,19 +26,27 @@ const busRoutes = [
     start: "IT Department",
     end: "Bus Stand",
     stops: ["Hostel 2", "Gate No. 3", "Central Park"],
-    timing: "8:00 AM - 10:00 PM",
+    timing: "8:00 AM - 05:00PM",
   },
 ];
 
 const BusRouteDetailsPage = () => {
   return (
     <div className="flex flex-col min-h-screen overflow-x-hidden bg-gray-900 text-white">
+      <Header />
       
-
       {/* Main Content */}
-      <div className="flex-grow flex flex-col items-center justify-center px-4 py-16">
-        <h2 className="text-3xl font-bold text-yellow-400 text-center mb-6">
-          🚌 Bus Routes & Schedule
+      <div className="flex-grow flex flex-col items-center justify-center px-4 py-16 relative">
+        <h2 className="text-3xl font-bold text-yellow-400 text-center mb-6 relative">
+          <motion.span
+            initial={{ x: 80 }} // Start from the right
+            animate={{ x: -10 }} // Move towards the left
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            className="inline-block text-4xl mx-2"
+          >
+            🚌
+          </motion.span>
+          Bus Tracking & Routes
         </h2>
 
         <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full max-w-6xl">
@@ -66,8 +75,8 @@ const BusRouteDetailsPage = () => {
           ))}
         </div>
       </div>
-
       
+      <Footer />
     </div>
   );
 };
