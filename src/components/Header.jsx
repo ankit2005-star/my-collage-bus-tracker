@@ -48,16 +48,15 @@ const Header = () => {
 
           {/* Desktop Navigation (Restricted) */}
           <div className="hidden lg:flex items-center gap-6">
-            <Link
-              to="/"
-              className="flex items-center gap-1 hover:text-gray-300"
-            >
-              <Home size={20} /> Home
-            </Link>
-
             {/* Restricted Links: Only accessible if user is logged in */}
             {user && (
               <>
+                <Link
+                  to="/"
+                  className="flex items-center gap-1 hover:text-gray-300"
+                >
+                  <Home size={20} /> Home
+                </Link>
                 <Link
                   to="/bus-tracking"
                   className="flex items-center gap-1 hover:text-gray-300"
