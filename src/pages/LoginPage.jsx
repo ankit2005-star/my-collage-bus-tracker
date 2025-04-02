@@ -1,116 +1,108 @@
-import { useState } from "react";
-import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
-import { auth, provider } from "../services/firebase";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import { signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
+import { auth, db, provider } from "../services/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [userType, setUserType] = useState(localStorage.getItem("userType") || null);
 
-  // Google Sign-In
-  const handleGoogleLogin = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      console.log("User signed in:", result.user);
-      navigate("/");
-    } catch (error) {
-      setError(error.message);
+  useEffect(() => {
+    if (userType) {
+      localStorage.setItem("userType", userType);
     }
-  };
+  }, [userType]);
 
-  // Email & Password Login
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      console.log("User logged in:", user.uid);
+
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        console.log("User data:", userData);
+
+        if (userData.userType === "driver") {
+          navigate("/driver-profile");
+        } else {
+          navigate("/student-dashboard");
+        }
+      } else {
+        setError("User data not found! Please contact support.");
+      }
+    } catch (error) {
+      console.error("Login error:", error.message);
+      setError("Invalid email or password!");
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      console.log("Google Sign-In successful:", result.user);
       navigate("/");
     } catch (error) {
-      setError(error.message);
+      console.error("Google Sign-In error:", error.message);
+      setError("Google Sign-In failed!");
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-900 text-white overflow-x-hidden">
-      
-
-      {/* Main Content */}
-      <div className="flex-grow flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-4xl bg-gray-800 text-gray-100 p-6 rounded-lg shadow-lg flex flex-col md:flex-row items-center gap-7 md:p-9">
-          {/* Image (Hidden on Small Screens) */}
-          <div className="hidden md:flex flex-1 justify-center">
-            <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQMP45F9ue9118LZo84ecDlBrU7jynMl3lVA&s"
-              alt="IIIT Bhopal Logo"
-              className="w-70 rounded-full"
-            />
-          </div>
-
-          {/* Login Form */}
-          <div className="flex-1 w-full">
-            <h1 className="text-2xl font-bold text-center md:text-left mb-4">
-              Login to <span className="text-yellow-400">Bus Tracker</span>
-            </h1>
-            <p className="text-gray-300 text-center md:text-left mb-4">
-              Track your college buses in real-time.
-            </p>
-
-            {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
-            )}
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <input
-                type="email"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-yellow-500 bg-gray-700 text-white"
-              />
-              <input
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-yellow-500 bg-gray-700 text-white"
-              />
-              <button
-                type="submit"
-                className="w-full py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition"
-              >
-                Login with Email
-              </button>
-            </form>
-
-            {/* Google Sign-In */}
-            <button
-              onClick={handleGoogleLogin}
-              className="w-full py-2 mt-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition"
-            >
-              Sign in with Google
-            </button>
-
-            {/* Sign Up Navigation */}
-            <p className="text-gray-400 text-sm text-center mt-4">
-              New here?{" "}
-              <span
-                className="text-yellow-400 font-semibold cursor-pointer hover:underline"
-                onClick={() => navigate("/signup")}
-              >
-                Sign Up
-              </span>
-            </p>
-          </div>
+    <div className="flex flex-col min-h-screen bg-gray-900 text-white items-center justify-center px-4">
+      {userType === null ? (
+        <div className="max-w-md w-full bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+          <h1 className="text-2xl font-bold text-yellow-400 mb-4">Login As</h1>
+          <button className="w-full py-2 bg-blue-600 text-white rounded-md mb-3 hover:bg-blue-700" onClick={() => setUserType("student")}>
+            Student
+          </button>
+          <button className="w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700" onClick={() => setUserType("driver")}>
+            Driver
+          </button>
         </div>
-      </div>
+      ) : (
+        <div className="max-w-md w-full bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold text-center text-yellow-400 mb-4">
+            {userType === "driver" ? "Driver Login" : "Student Login"}
+          </h1>
 
-      
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <input type="email" placeholder="Enter email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2 bg-gray-700 border rounded-md text-white" />
+            <input type="password" placeholder="Enter password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-2 bg-gray-700 border rounded-md text-white" />
+            <button type="submit" className="w-full py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+              Login
+            </button>
+          </form>
+
+          <button onClick={handleGoogleLogin} className="w-full py-2 mt-3 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+            Sign in with Google
+          </button>
+
+          <p className="text-gray-400 text-sm text-center mt-4">
+            New User?{" "}
+            <span className="text-yellow-400 font-semibold cursor-pointer hover:underline" onClick={() => navigate(`/signup?type=${userType}`)}>
+              Sign Up as {userType === "driver" ? "Driver" : "Student"}
+            </span>
+          </p>
+
+          <p className="text-gray-400 text-xs text-center mt-2 cursor-pointer hover:underline" onClick={() => {
+            setUserType(null);
+            localStorage.removeItem("userType");
+          }}>
+            Back to Selection
+          </p>
+        </div>
+      )}
     </div>
   );
 };
