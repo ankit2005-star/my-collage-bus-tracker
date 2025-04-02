@@ -130,13 +130,24 @@ const ProfilePage = () => {
               </button>
             </>
           ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="w-full px-4 py-2 bg-[#0ea5e9] text-white rounded-lg hover:bg-[#0284c7] transition-all"
-            >
-              Edit Profile
-            </button>
+            <>
+              <button
+                onClick={() => setIsEditing(true)}
+                className="w-full px-4 py-2 bg-[#0ea5e9] text-white rounded-lg hover:bg-[#0284c7] transition-all"
+              >
+                Edit Profile
+              </button>
+
+              {/* ✅ New "Change Language" button added below "Edit Profile" */}
+              <button
+                onClick={() => console.log("Change Language Clicked")}
+                className="w-full px-4 py-2 bg-[#0ea5e9] text-white rounded-lg hover:bg-[#0284c7] transition-all"
+              >
+                Change Language
+              </button>
+            </>
           )}
+
           <button
             onClick={handleLogout}
             className="w-full px-4 py-2 bg-[#dc2626] text-white rounded-lg hover:bg-[#b91c1c] transition-all"
