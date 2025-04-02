@@ -1,18 +1,31 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { auth, db, provider } from "../services/firebase";
-import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { auth, db } from "../services/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 
 const SignupPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [userType, setUserType] = useState("student"); // Default to student
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const type = params.get("type");
+    if (type === "driver" || type === "student") {
+      setUserType(type);
+    }
+  }, [location.search]);
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [rollNumber, setRollNumber] = useState("");
+  const [address, setAddress] = useState("");
+  const [busNumber, setBusNumber] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -22,39 +35,27 @@ const SignupPage = () => {
       setError("All fields are required!");
       return;
     }
-
     if (password !== confirmPassword) {
       setError("Passwords do not match!");
       return;
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      await setDoc(doc(db, "users", user.uid), { name, email });
+      const userData = {
+        name,
+        email,
+        phone,
+        userType,
+        ...(userType === "student" ? { rollNumber } : {}),
+        ...(userType === "driver" ? { address, busNumber } : {}),
+      };
 
-      alert("Signup successful! Redirecting to home...");
-      navigate("/");
-    } catch (error) {
-      setError(error.message);
-    }
-  };
+      await setDoc(doc(db, "users", user.uid), userData, { merge: true });
 
-  const handleGoogleSignup = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      await setDoc(doc(db, "users", user.uid), {
-        name: user.displayName || "User",
-        email: user.email,
-      });
-
+      alert("Signup successful! Redirecting...");
       navigate("/");
     } catch (error) {
       setError(error.message);
@@ -62,103 +63,36 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-900 text-gray-200">
-      
+    <div className="flex justify-center items-center min-h-screen bg-gray-900 text-white">
+      <div className="w-full max-w-md bg-gray-800 p-6 rounded-lg shadow-lg">
+        <h1 className="text-2xl font-bold text-center mb-4 text-yellow-400">
+          Create an Account for {userType === "student" ? "Student" : "Driver"}
+        </h1>
+        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-      {/* Main Content */}
-      <div className="flex-grow flex flex-col items-center justify-center px-4">
-        <div className=" max-w-4xl bg-gray-800 text-gray-100 p-6 rounded-lg shadow-lg flex flex-col md:flex-row items-center gap-6 md:p-4 ">
-          {/* Image (Hidden on Small Screens) */}
-          <div className="hidden md:flex flex-1 justify-center">
-            <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQMP45F9ue9118LZo84ecDlBrU7jynMl3lVA&s"
-              alt="Signup Icon"
-              className="w-70 rounded-full"
-            />
-          </div>
+        <form onSubmit={handleSignup} className="space-y-3">
+          <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} required className="w-full px-4 py-2 border rounded-md bg-gray-700 text-white" />
+          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-2 border rounded-md bg-gray-700 text-white" />
+          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-2 border rounded-md bg-gray-700 text-white" />
+          <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="w-full px-4 py-2 border rounded-md bg-gray-700 text-white" />
 
-          {/* Signup Form */}
-          <div className="flex-1 w-full">
-            <h1 className="text-2xl font-bold text-center md:text-left mb-3 text-yellow-400">
-              Create an Account
-            </h1>
+          {userType === "student" ? (
+            <input type="text" placeholder="Roll Number" value={rollNumber} onChange={(e) => setRollNumber(e.target.value)} required className="w-full px-4 py-2 border rounded-md bg-gray-700 text-white" />
+          ) : (
+            <>
+              <input type="text" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} required className="w-full px-4 py-2 border rounded-md bg-gray-700 text-white" />
+              <input type="text" placeholder="Bus Number" value={busNumber} onChange={(e) => setBusNumber(e.target.value)} required className="w-full px-4 py-2 border rounded-md bg-gray-700 text-white" />
+            </>
+          )}
 
-            {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
-            )}
-
-            <form onSubmit={handleSignup} className="space-y-3">
-              <input
-                type="text"
-                placeholder="Full Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#00BFFF] bg-gray-700 text-white text-sm"
-              />
-              <input
-                type="email"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#00BFFF] bg-gray-700 text-white text-sm"
-              />
-              <input
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#00BFFF] bg-gray-700 text-white text-sm"
-              />
-              <input
-                type="password"
-                placeholder="Confirm password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-[#00BFFF] bg-gray-700 text-white text-sm"
-              />
-              <button
-                type="submit"
-                className="w-full py-2 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 transition duration-300 text-sm"
-              >
-                Sign Up
-              </button>
-            </form>
-
-            {/* Google Sign-Up */}
-            <div className="flex items-center my-3">
-              <div className="flex-1 h-px bg-gray-600"></div>
-              <p className="px-2 text-gray-400 text-xs">or</p>
-              <div className="flex-1 h-px bg-gray-600"></div>
-            </div>
-
-            <button
-              onClick={handleGoogleSignup}
-              className="w-full py-2 bg-blue-500 text-gray-100 font-medium rounded-md hover:bg-gray-200 transition duration-300 text-sm"
-            >
-              Sign up with Google
-            </button>
-
-            {/* Login Navigation */}
-            <p className="text-gray-400 text-xs text-center mt-3">
-              Already have an account?{" "}
-              <span
-                className="text-yellow-400 font-semibold cursor-pointer hover:underline"
-                onClick={() => navigate("/login")}
-              >
-                Login here
-              </span>
-            </p>
-          </div>
-        </div>
+          <button type="submit" className="w-full py-2 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600 transition duration-300">
+            Sign Up
+          </button>
+        </form>
       </div>
-
-      
     </div>
   );
 };
 
 export default SignupPage;
+
