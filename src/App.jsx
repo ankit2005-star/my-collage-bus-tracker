@@ -1,34 +1,41 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute";
-import HelpSupportPage from "./pages/HelpSuppportPage.jsx";
+import HelpSupportPage from "./pages/HelpSuppportPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ProfilePage from "./pages/ProfilePage";
-import BusTrackingPage from "./pages/BusTrackingPage.jsx";
-import BusRouteDetails from "./pages/BusRouteDetailsPage.jsx";
-import MapComponent from "./components/MapComponent.jsx";
-import Header from "./components/Header.jsx";
-import Footer from "./components/Footer.jsx";
-
+import BusTrackingPage from "./pages/BusTrackingPage";
+import BusRouteDetails from "./pages/BusRouteDetailsPage";
+import MapComponent from "./components/MapComponent";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import DriverProfilePage from "./pages/DriverProfilePage"; 
 function App() {
+  const location = useLocation();
+  const hideHeaderFooter = location.pathname === "/login" || location.pathname === "/signup"; // ✅ Hide Header & Footer on Login/Signup pages
+
   return (
     <>
-      <Header />
+      {!hideHeaderFooter && <Header />}  {/* ✅ Hide Header on login/signup */}
+
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        
+
         <Route element={<PrivateRoute />}>
+        
+          <Route path="/" element={<HomePage />} />
           <Route path="/help-support" element={<HelpSupportPage />} />
           <Route path="/bus-route-details" element={<BusRouteDetails />} />
           <Route path="/bus-tracking" element={<BusTrackingPage />} />
-          <Route path="/map" element={<MapComponent />} /> {/* Added this route */}
-          <Route path="/" element={<HomePage />} />
+          <Route path="/map" element={<MapComponent />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/driver-profile" element={<DriverProfilePage />} /> {/* ✅ Added new driver profile route */}
         </Route>
       </Routes>
-      <Footer />
+
+      {!hideHeaderFooter && <Footer />} {/* ✅ Hide Footer on login/signup */}
     </>
   );
 }
