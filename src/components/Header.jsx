@@ -14,10 +14,11 @@ import {
   BusFront,
   Home,
   Route,
-} from "lucide-react"; // Added Home & Route icons
+  LayoutDashboard,
+} from "lucide-react";
 
 const Header = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, userData } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -35,22 +36,44 @@ const Header = () => {
     document.body.style.overflow = menuOpen ? "hidden" : "auto";
   }, [menuOpen]);
 
+  const renderDashboardLink = () => {
+    if (userData?.role === "admin") {
+      return (
+        <Link
+          to="/admin-dashboard"
+          className="flex items-center gap-1 hover:text-gray-300"
+        >
+          <LayoutDashboard size={20} /> Admin Dashboard
+        </Link>
+      );
+    }
+    if (userData?.role === "driver") {
+      return (
+        <Link
+          to="/driver-dashboard"
+          className="flex items-center gap-1 hover:text-gray-300"
+        >
+          <LayoutDashboard size={20} /> Driver Dashboard
+        </Link>
+      );
+    }
+    return null;
+  };
+
   return (
     <>
-      {/* 🛠 Fixed Header */}
       <nav className="bg-[#222] text-white p-4 fixed w-full top-0 left-0 z-50 shadow-md">
         <div className="flex justify-between items-center">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <BusFront className="w-8 h-8 text-yellow-400" />
             <span className="text-xl font-semibold">Bus Tracker</span>
           </Link>
 
-          {/* Desktop Navigation (Restricted) */}
+          {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-6">
-            {/* Restricted Links: Only accessible if user is logged in */}
             {user && (
               <>
+                {renderDashboardLink()}
                 <Link
                   to="/"
                   className="flex items-center gap-1 hover:text-gray-300"
@@ -81,16 +104,17 @@ const Header = () => {
                 >
                   <HelpCircle size={20} /> Help
                 </Link>
-                <Link
-                  to="/profile"
-                  className="flex items-center gap-1 hover:text-gray-300"
-                >
-                  <User size={20} /> Profile
-                </Link>
+                {userData?.role === "student" && (
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-1 hover:text-gray-300"
+                  >
+                    <User size={20} /> Profile
+                  </Link>
+                )}
               </>
             )}
 
-            {/* Login/Signup for Unauthenticated Users */}
             {!user && (
               <>
                 <Link
@@ -119,10 +143,9 @@ const Header = () => {
         </div>
       </nav>
 
-      {/* 🛠 Push Content Down */}
       <div className="pt-16"></div>
 
-      {/* 🛠 Mobile Menu (Restricted) */}
+      {/* Mobile Menu */}
       {menuOpen && (
         <div className="fixed inset-0 bg-[#222] text-white p-6 flex flex-col z-50 overflow-hidden">
           <button
@@ -141,9 +164,26 @@ const Header = () => {
               <Home size={24} /> Home
             </Link>
 
-            {/* Restricted Links: Only accessible if user is logged in */}
             {user && (
               <>
+                {userData?.role === "admin" && (
+                  <Link
+                    to="/admin-dashboard"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 text-lg hover:text-gray-300"
+                  >
+                    <LayoutDashboard size={24} /> Admin Dashboard
+                  </Link>
+                )}
+                {userData?.role === "driver" && (
+                  <Link
+                    to="/driver-dashboard"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 text-lg hover:text-gray-300"
+                  >
+                    <LayoutDashboard size={24} /> Driver Dashboard
+                  </Link>
+                )}
                 <Link
                   to="/bus-tracking"
                   onClick={() => setMenuOpen(false)}
@@ -172,13 +212,15 @@ const Header = () => {
                 >
                   <HelpCircle size={24} /> Help
                 </Link>
-                <Link
-                  to="/profile"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 text-lg hover:text-gray-300"
-                >
-                  <User size={24} /> Profile
-                </Link>
+                {userData?.role === "student" && (
+                  <Link
+                    to="/profile"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 text-lg hover:text-gray-300"
+                  >
+                    <User size={24} /> Profile
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   className="w-full py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300 flex items-center gap-2 justify-center"
@@ -188,7 +230,6 @@ const Header = () => {
               </>
             )}
 
-            {/* Login/Signup for Unauthenticated Users */}
             {!user && (
               <>
                 <Link

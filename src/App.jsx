@@ -40,7 +40,7 @@ function App() {
           <Route path="/bus-tracking" element={<BusTrackingPage />} />
           <Route path="/map" element={<MapComponent />} />
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/driver-profile" element={<DriverProfilePage />} />{" "}
+          <Route path="/driver-profile" element={<DriverProfilePage />} />
           {/* ✅ Added new driver profile route */}
         </Route>
       </Routes>

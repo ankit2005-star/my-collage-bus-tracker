@@ -1,54 +1,82 @@
-import { useEffect, useState } from "react";
-import { db } from "../services/firebase"; // Firebase config
-import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import { useAuth } from "../context/AuthContext";
+import { BusFront, MapPin, CalendarDays, User } from "lucide-react";
+import { Link } from "react-router-dom";
 
-const DriverDashboard = ({ driverId }) => {
-  const [buses, setBuses] = useState([]);
-  const [assignedBus, setAssignedBus] = useState(null);
-
-  useEffect(() => {
-    const fetchBuses = async () => {
-      const querySnapshot = await getDocs(collection(db, "buses"));
-      setBuses(
-        querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-      );
-    };
-
-    fetchBuses();
-  }, []);
-
-  const handleBusSelect = async (busId) => {
-    // Update bus status in Firestore
-    await updateDoc(doc(db, "buses", busId), {
-      status: "assigned",
-      assignedDriver: driverId,
-    });
-
-    // Update driver's assigned bus
-    await updateDoc(doc(db, "drivers", driverId), {
-      assignedBus: busId,
-    });
-
-    setAssignedBus(busId);
-  };
+const DriverDashboard = () => {
+  const { userData } = useAuth();
 
   return (
-    <div className="p-6 bg-gray-800 text-white">
-      <h2 className="text-xl font-bold mb-4">Driver Dashboard</h2>
-      <h3>Assigned Bus: {assignedBus || "None"}</h3>
+    <div className="min-h-screen bg-black text-white px-4 py-6 dark:bg-gray-900">
+      <div className="max-w-5xl mx-auto">
+        {/* Greeting Section */}
+        <div className="bg-gray-800 shadow-md rounded-lg p-6 mb-6 border border-yellow-400">
+          <h1 className="text-2xl font-bold text-yellow-400">
+            Welcome, {userData?.name || "Driver"} 👋
+          </h1>
+          <p className="text-gray-300 mt-1">
+            Here is your dashboard. Check your route, schedule, and profile.
+          </p>
+        </div>
 
-      <h3 className="mt-4">Available Buses:</h3>
-      {buses
-        .filter((bus) => bus.status === "available")
-        .map((bus) => (
-          <button
-            key={bus.id}
-            onClick={() => handleBusSelect(bus.id)}
-            className="bg-blue-500 text-white px-4 py-2 rounded m-2"
+        {/* Info Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Route Details */}
+          <Link
+            to="/bus-route-details"
+            className="bg-yellow-400 hover:bg-yellow-500 transition shadow rounded-lg p-5 flex items-center gap-4 text-black"
           >
-            {bus.route} ({bus.id})
-          </button>
-        ))}
+            <MapPin size={36} className="text-black" />
+            <div>
+              <h2 className="font-semibold text-lg">View Route</h2>
+              <p className="text-sm">See your assigned bus route</p>
+            </div>
+          </Link>
+
+          {/* Schedule */}
+          <div className="bg-gray-700 hover:bg-gray-600 transition shadow rounded-lg p-5 flex items-center gap-4">
+            <CalendarDays size={36} className="text-yellow-400" />
+            <div>
+              <h2 className="font-semibold text-lg text-white">Schedule</h2>
+              <p className="text-gray-300 text-sm">
+                Upcoming route timing info
+              </p>
+            </div>
+          </div>
+
+          {/* Profile */}
+          <Link
+            to="/driver-profile"
+            className="bg-yellow-400 hover:bg-yellow-500 transition shadow rounded-lg p-5 flex items-center gap-4 text-black"
+          >
+            <User size={36} className="text-black" />
+            <div>
+              <h2 className="font-semibold text-lg">Your Profile</h2>
+              <p className="text-sm">Check or update your info</p>
+            </div>
+          </Link>
+        </div>
+
+        {/* Assigned Bus Info */}
+        <div className="bg-gray-800 shadow-md rounded-lg p-6 mt-8 border border-yellow-400">
+          <h2 className="text-xl font-semibold text-yellow-400 mb-2">
+            Assigned Bus
+          </h2>
+          <div className="flex items-center gap-4">
+            <BusFront size={40} className="text-yellow-400" />
+            <div>
+              <p className="font-medium text-white">
+                Bus Number:{" "}
+                <span className="text-yellow-400">
+                  {userData?.busNumber || "N/A"}
+                </span>
+              </p>
+              <p className="text-sm text-gray-300">
+                Route: {userData?.route || "Not Assigned Yet"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
