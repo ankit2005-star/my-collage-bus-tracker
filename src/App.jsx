@@ -15,6 +15,9 @@ import AdminDashboard from "./dashboard/AdminDashboard";
 import DriverDashboard from "./dashboard/DriverDashboard";
 import ForgotPassword from "./pages/ForgotPassword";
 import VerifyOTP from "./pages/VerifyOtp";
+import "leaflet/dist/leaflet.css";
+import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
+
 
 
 function App() {
@@ -40,7 +43,7 @@ function App() {
           <Route path="/bus-tracking" element={<BusTrackingPage />} />
           <Route path="/map" element={<MapComponent />} />
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/driver-profile" element={<DriverProfilePage />} />
+          <Route path="/driver-profile" element={<DriverProfilePage />} />{" "}
           {/* ✅ Added new driver profile route */}
         </Route>
       </Routes>
