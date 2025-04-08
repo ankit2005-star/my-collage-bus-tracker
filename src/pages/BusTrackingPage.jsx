@@ -1,6 +1,10 @@
+// ✅ BusTrackingPage.jsx
 import { useState, useEffect } from "react";
 import { Search, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getDatabase, ref, onValue } from "firebase/database";
+import { haversineDistance } from "../utils/haversine";
+import { bus101Stops, bus102Stops } from "../data/busStops";
 
 const BusTrackingPage = () => {
   const [buses, setBuses] = useState([]);
@@ -12,12 +16,57 @@ const BusTrackingPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const busData = [
-      { busNumber: "101", location: "Near Main Gate", eta: "10 min", lat: 23.2500, lng: 77.4100 },
-      { busNumber: "102", location: "Near Library", eta: "15 min", lat: 23.2700, lng: 77.4200 },
-    ];
-    setBuses(busData);
-    setFilteredBuses(busData);
+    const db = getDatabase();
+    const busNumbers = ["101", "102"];
+
+    const updatedBuses = [];
+    const unsubscribeFns = busNumbers.map((busNumber) => {
+      const busRef = ref(db, `busLocations/${busNumber}`);
+
+      return onValue(busRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data || !data.lat || !data.lng) return;
+
+        const currentLat = data.lat;
+        const currentLng = data.lng;
+        const crossedStops = data.crossedStops || [];
+
+        const stops = busNumber === "101" ? bus101Stops : bus102Stops;
+
+        let nearestStop = null;
+        let minDistance = Infinity;
+
+        for (let stop of stops) {
+          if (!crossedStops.includes(stop.name)) {
+            const dist = haversineDistance(currentLat, currentLng, stop.lat, stop.lng);
+            if (dist < minDistance) {
+              minDistance = dist;
+              nearestStop = stop;
+            }
+          }
+        }
+
+        const busData = {
+          busNumber,
+          location: nearestStop ? `Near ${nearestStop.name}` : "No nearby stop",
+          eta: "Calculating...",
+          lat: currentLat,
+          lng: currentLng,
+        };
+
+        const index = updatedBuses.findIndex((b) => b.busNumber === busNumber);
+        if (index !== -1) {
+          updatedBuses[index] = busData;
+        } else {
+          updatedBuses.push(busData);
+        }
+
+        setBuses([...updatedBuses]);
+        setFilteredBuses([...updatedBuses]);
+      });
+    });
+
+    return () => unsubscribeFns.forEach((unsubscribe) => unsubscribe());
   }, []);
 
   const handleSearch = () => {
@@ -42,13 +91,13 @@ const BusTrackingPage = () => {
   };
 
   const handleBusClick = (bus) => {
-    navigate("/map", { state: { bus } }); // Navigate to MapComponent with bus details
+    navigate("/map", { state: { bus } });
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white">
       <h2 className="text-3xl font-bold text-yellow-400 text-center mt-6">🚍 Bus Tracking</h2>
-      
+
       <div className="flex justify-center items-center mt-4">
         <div className="relative w-80">
           <input
@@ -91,3 +140,8 @@ const BusTrackingPage = () => {
 };
 
 export default BusTrackingPage;
+
+
+// ✅ MapComponent.jsx
+// (Use the full MapComponent you were using previously with Firebase + Leaflet + BottomSheet, and make sure the bus ID is passed via route state)
+// If needed, I’ll help you re-integrate the final full MapComponent in next message.
