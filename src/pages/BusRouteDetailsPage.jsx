@@ -6,18 +6,21 @@ import Footer from "../components/Footer";
 const busRoutes = [
   {
     id: 1,
-    routeName: "Route A",
-    start: "Main Gate",
-    end: "Hostel Block",
-    stops: ["Library", "Cafeteria", "Sports Complex"],
+    routeName: "Route Bus 101 ",
+    start: "MANIT GATE",
+    end: "SINGHARCHOLI ",
+    stops: ["Roshanpura square", "Kamla park road", "Kamla park road","Kohefiza square","Lalghati square","Halalpura","Sant Hindaram","Bairagarh",
+            "Anchavati Colony"],
     timing: "7:30 AM - 6:00 PM",
   },
   {
     id: 2,
-    routeName: "Route B",
-    start: "Admin Block",
-    end: "City Center",
-    stops: ["Lecture Hall 1", "Gate No. 2", "Railway Station"],
+    routeName: "Route Bus 102",
+    start: "MANIT GATE",
+    end: "BHOPAL JUNCTION",
+    stops: ["Tulsi Nagar","Shivaji Nagar","Mp Nagar","Arera Hills","Jahangirabad","Old Shubash Nagar","New Shubash Nagar","Ashoka Garden",
+      "Krishna Campus","Navbhar colony"
+    ],
     timing: "6:30 AM - 05:30 PM",
   },
   {
@@ -39,9 +42,9 @@ const BusRouteDetailsPage = () => {
       <div className="flex-grow flex flex-col items-center justify-center px-4 py-16 relative">
         <h2 className="text-3xl font-bold text-yellow-400 text-center mb-6 relative">
           <motion.span
-            initial={{ x: 80 }} // Start from the right
-            animate={{ x: -10 }} // Move towards the left
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            initial={{ x: 400 }} // Start from the right
+            animate={{ x: -60 }} // Move towards the left
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             className="inline-block text-4xl mx-2"
           >
             🚌
@@ -76,9 +79,10 @@ const BusRouteDetailsPage = () => {
         </div>
       </div>
       
-      <Footer />
+      
     </div>
   );
 };
 
 export default BusRouteDetailsPage;
+
