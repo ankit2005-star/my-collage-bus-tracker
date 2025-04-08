@@ -1,302 +1,258 @@
-import React, { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import "leaflet-routing-machine";
+// ✅ FINAL VERSION - MapComponent.jsx with Reverse Mode Support
+import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
+import "leaflet-routing-machine";
+import haversine from "haversine-distance";
+import { getDatabase, ref, onValue, set, get, remove } from "firebase/database";
+import { initializeApp } from "firebase/app";
+import BottomSheet from "./BottomSheet";
+import busIconImg from "../assets/bus-stop.png";
 
+// 🔥 Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBZEdKIXhLCxbmkTnS_xfNR490-jKlf9yw",
+  authDomain: "my-collage-bus-tracker-964e8.firebaseapp.com",
+  databaseURL: "https://my-collage-bus-tracker-964e8-default-rtdb.firebaseio.com",
+  projectId: "my-collage-bus-tracker-964e8",
+  storageBucket: "my-collage-bus-tracker-964e8.appspot.com",
+  messagingSenderId: "127234319162",
+  appId: "1:127234319162:web:b1965e4abaa5ec0fe26603",
+};
 
-// Telegram Bot Tokens (Stored in Environment Variables)
-const botToken1 = import.meta.env.VITE_TELEGRAM_BOT_TOKEN_1;
-const botToken2 = import.meta.env.VITE_TELEGRAM_BOT_TOKEN_2;
-const userBotToken = import.meta.env.VITE_TELEGRAM_USER_BOT_TOKEN;
-const userId = "1354899331"; // Replace with actual user ID
-
-// Bus Configuration
-const BUS_BOTS = [
-  { token: botToken1, busNumber: "101" },
-  { token: botToken2, busNumber: "102" }
-];
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 const MapComponent = () => {
-  const [busPositions, setBusPositions] = useState({});
-  const [userPosition, setUserPosition] = useState(null);
-  const [distanceInfo, setDistanceInfo] = useState({});
+  const [selectedBus, setSelectedBus] = useState("101");
+  const [crossedStops, setCrossedStops] = useState([]);
+  const [nextStop, setNextStop] = useState(null);
+  const [distanceToNext, setDistanceToNext] = useState(null);
+  const [etaToNext, setEtaToNext] = useState(null);
+  const [reverse, setReverse] = useState(false);
+
   const mapRef = useRef(null);
-  const routingControlRef = useRef(null);
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // Earth's radius in km
-  const toRad = (deg) => (deg * Math.PI) / 180;
+  const routingRef = useRef(null);
+  const busMarkerRef = useRef(null);
+  const markerGroupRef = useRef(null);
+  const currentStopIndexRef = useRef(0);
+  const manitGateCrossedRef = useRef(false);
+  const approachingStopRef = useRef(null);
+  const crossedFetchedRef = useRef(false);
+  const routeControlRef = useRef(null);
 
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // Distance in km
-};
-useEffect(() => {
-  if (mapRef.current) {
-    L.control.scale().addTo(mapRef.current);
-    console.log("🗺️ Leaflet Map Initialized!");
-  }
-}, []);
+  const bus101Stops = [
+    { lat: 23.217883940082572, lng: 77.4056126070792, name: "MANIT GATE" },
+    { lat: 23.237493644198405, lng: 77.40106552863337, name: "ROSHANPURA SQUARE" },
+    { lat: 23.255608322309183, lng: 77.39859373642582, name: "KAMLA PARK ROAD" },
+    { lat: 23.264794941124965, lng: 77.38083701795655, name: "KOHEFIZA SQUARE" },
+    { lat: 23.272809976494436, lng: 77.37020054239919, name: "LALGHATI SQAURE" },
+    { lat: 23.274183057840972, lng: 77.35787572587991, name: "HALALPURA" },
+    { lat: 23.270678893274773, lng: 77.33365800162316, name: "SANT HINDARAM" },
+    { lat: 23.278501935686304, lng: 77.3337703005592, name: "BAIRAGARH" },
+    { lat: 23.279860095934165, lng: 77.34384117716303, name: "ANCHAVATI COLONY" },
+    { lat: 23.284093325749105, lng: 77.3573978913472, name: "SINGARCHOLI" },
+  ];
 
-// const routingControls = {}; // Store routes for different buses
+  const bus102Stops = [
+    { lat: 23.217883940082572, lng: 77.4056126070792, name: "MANIT GATE" },
+    { lat: 23.232815993912947, lng: 77.40199478270019, name: "TULSI NAGAR" },
+    { lat: 23.229032885492433, lng: 77.41830402324092, name: "SHIVAJI NAGAR" },
+    { lat: 23.231088634906328, lng: 77.43253482077027, name: "MP NAGAR" },
+    { lat: 23.240235261598517, lng: 77.42289717469222, name: "ARERA HILLS" },
+    { lat: 23.252707541322973, lng: 77.41389676964619, name: "JAHANGIRABAD" },
+    { lat: 23.24804148287806, lng: 77.43149047389336, name: "OLD SUBHASH NAGAR" },
+    { lat: 23.251952047973347, lng: 77.43091951938048, name: "NEW SUBHASH NAGAR" },
+    { lat: 23.25910522393857, lng: 77.43149047389336, name: "ASHOKA GARDEN" },
+    { lat: 23.26495162779652, lng: 77.4233056574509, name: "KRISHNA CAMPUS" },
+    { lat: 23.264905602067927, lng: 77.41344757452178, name: "NAVBHAR COLONY" },
+    { lat: 23.267436185272977, lng: 77.41435658883637, name: "BHOPAL JUNCTION" },
+  ];
 
-// const addRouting = (from, to, busNumber) => {
-//   if (!mapRef.current) return;
+  const originalStops = selectedBus === "101" ? bus101Stops : bus102Stops;
+  const stops = reverse ? [...originalStops].reverse() : originalStops;
 
-//   if (!from || !to || !from.lat || !from.lng || !to.lat || !to.lng) {
-//     console.log("❌ Missing user or bus location! Cannot calculate route.");
-//     return;
-//   }
+  const busRef = ref(db, `busLocations/${selectedBus}`);
+  const crossedStopsRef = ref(db, `crossedStops/${selectedBus}${reverse ? "_rev" : ""}`);
 
-//   // 🛠 Remove previous route for the specific bus (if it exists)
-//   if (routingControls[busNumber]) {
-//     mapRef.current.removeControl(routingControls[busNumber]);
-//   }
-
-  // 🛠 Create new routing control for the bus
-  const routingControls = {}; // Store routing controls for each bus
-
-  const addRouting = (from, to, busNumber) => {
-    if (!mapRef.current) return;
-  
-    console.log(`🛣️ Adding Route for Bus ${busNumber}`);
-  
-    if (!from || !to || !from.lat || !from.lng || !to.lat || !to.lng) {
-      console.warn(`⚠️ Missing coordinates for Bus ${busNumber}. Skipping route.`);
-      return;
+  const fetchCrossed = async () => {
+    const snapshot = await get(crossedStopsRef);
+    const data = snapshot.val();
+    if (data?.manitGateCrossed) {
+      manitGateCrossedRef.current = true;
+      setCrossedStops(data.list || []);
+      currentStopIndexRef.current = (data.list?.slice(-1)[0] || 0) + 1;
+    } else {
+      setCrossedStops([]);
+      manitGateCrossedRef.current = false;
+      currentStopIndexRef.current = 0;
     }
-  
-    // 🛠 Remove existing route if it exists
-    if (routingControls[busNumber]) {
-      console.log(`🔄 Removing old route for Bus ${busNumber}`);
-      mapRef.current.removeControl(routingControls[busNumber]);
-      delete routingControls[busNumber];  // Remove reference
-    }
-  
-    // 🛠 Create new routing control for the bus
-    const routingControl = L.Routing.control({
-      waypoints: [L.latLng(from.lat, from.lng), L.latLng(to.lat, to.lng)],
-      router: L.Routing.osrmv1({
-        serviceUrl: "https://router.project-osrm.org/route/v1"
-      }),
-      routeWhileDragging: true,
-      lineOptions: { styles: [{ color: "blue", weight: 5, opacity: 0.7 }] },
-      createMarker: (i, waypoint) =>
-        L.marker(waypoint.latLng, { draggable: false }).bindPopup(i === 0 ? "Start" : "End"),
-    })
-      .on("routesfound", (e) => {
-        const route = e.routes[0];
-        if (route) {
-          const distance = (route.summary.totalDistance / 1000).toFixed(2);
-          const duration = Math.ceil(route.summary.totalTime / 60);
-          console.log(`📏 Distance: ${distance} km, ⏱️ ETA: ${duration} min`);
-  
-          setDistanceInfo((prev) => ({
-            ...prev,
-            [busNumber]: { distance, duration },
-          }));
-        } else {
-          console.error("❌ No route found!");
-        }
-      })
-      .addTo(mapRef.current);
-  
-    // Store routing control
-    routingControls[busNumber] = routingControl;
+    crossedFetchedRef.current = true;
   };
-  
 
-  // Fetch Bus Locations from Telegram Bot
-  const fetchBusLocations = async () => {
-    try {
-      let lastUpdateId = 0;  // Keep track of last update
-      for (const bot of BUS_BOTS) {
-        const response = await fetch(
-          `https://api.telegram.org/bot${bot.token}/getUpdates?offset=${lastUpdateId + 1}`
-        );
-        const data = await response.json();
-  
-        if (Array.isArray(data.result) && data.result.length > 0) {
-          const lastUpdate = data.result[data.result.length - 1];
-          lastUpdateId = lastUpdate.update_id;  // Update offset
-          
-          const location = lastUpdate.message?.location;
-          if (location) {
-            setBusPositions((prev) => ({
-              ...prev,
-              [bot.busNumber]: { lat: location.latitude, lng: location.longitude },
-            }));
+  useEffect(() => {
+    crossedFetchedRef.current = false;
+    fetchCrossed();
+    approachingStopRef.current = null;
+
+    // 🧼 Clean old marker/routes
+    busMarkerRef.current?.remove();
+    busMarkerRef.current = null;
+    markerGroupRef.current?.clearLayers();
+    routeControlRef.current?.remove();
+  }, [selectedBus, reverse]);
+
+  useEffect(() => {
+    const map = mapRef.current || L.map("map").setView([23.23, 77.41], 13);
+    if (!mapRef.current) {
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+      mapRef.current = map;
+    }
+
+    markerGroupRef.current?.clearLayers();
+    routingRef.current?.remove();
+    busMarkerRef.current?.remove();
+
+    const markerGroup = L.layerGroup();
+    stops.forEach((stop, i) => {
+      const marker = L.circleMarker([stop.lat, stop.lng], {
+        radius: 8,
+        color: crossedStops.includes(i) ? "green" : "white",
+        fillColor: crossedStops.includes(i) ? "green" : "white",
+        fillOpacity: 1,
+        weight: 2,
+      }).bindPopup(`<b>${stop.name}</b>`);
+      markerGroup.addLayer(marker);
+    });
+    markerGroup.addTo(map);
+    markerGroupRef.current = markerGroup;
+
+    routingRef.current = L.Routing.control({
+      waypoints: stops.map((s) => L.latLng(s.lat, s.lng)),
+      lineOptions: { styles: [{ color: "black", weight: 4 }] },
+      createMarker: () => null,
+      addWaypoints: false,
+      draggableWaypoints: false,
+      routeWhileDragging: false,
+    }).addTo(map);
+  }, [selectedBus, crossedStops, reverse]);
+
+  useEffect(() => {
+    const unsubscribe = onValue(busRef, (snapshot) => {
+      if (!crossedFetchedRef.current) return;
+      const busData = snapshot.val();
+      if (!busData?.lat || !busData?.lng) return;
+
+      const currentLatLng = [busData.lat, busData.lng];
+      if (!busMarkerRef.current) {
+        const busIcon = L.icon({
+          iconUrl: busIconImg,
+          iconSize: [35, 35],
+          iconAnchor: [17, 34],
+        });
+        busMarkerRef.current = L.marker(currentLatLng, { icon: busIcon }).addTo(mapRef.current);
+        mapRef.current.setView(currentLatLng, 15);
+      } else {
+        busMarkerRef.current.setLatLng(currentLatLng);
+      }
+
+      const firstStop = stops[0];
+      const distFromFirst = haversine(currentLatLng, [firstStop.lat, firstStop.lng]) / 1000;
+
+      if (!manitGateCrossedRef.current && distFromFirst < 0.2) {
+        manitGateCrossedRef.current = true;
+        const updated = [0];
+        setCrossedStops(updated);
+        currentStopIndexRef.current = 1;
+        set(crossedStopsRef, {
+          list: updated,
+          manitGateCrossed: true,
+        });
+        return;
+      }
+
+      if (!manitGateCrossedRef.current) return;
+
+      const nextIndex = currentStopIndexRef.current;
+      const next = stops[nextIndex];
+      if (next) {
+        const router = L.Routing.control({
+          waypoints: [L.latLng(busData.lat, busData.lng), L.latLng(next.lat, next.lng)],
+          createMarker: () => null,
+          addWaypoints: false,
+          routeWhileDragging: false,
+        });
+
+        router.on("routesfound", function (e) {
+          const route = e.routes[0];
+          const dist = route.summary.totalDistance / 1000;
+          const eta = route.summary.totalTime / 60;
+
+          setNextStop(next);
+          setDistanceToNext(dist.toFixed(2));
+          setEtaToNext(eta.toFixed(1));
+
+          if (dist < 0.165 && approachingStopRef.current !== nextIndex) {
+            approachingStopRef.current = nextIndex;
           }
-        }
+
+          if (approachingStopRef.current === nextIndex && dist > 0.2) {
+            const updated = [...crossedStops, nextIndex];
+            setCrossedStops(updated);
+            currentStopIndexRef.current = nextIndex + 1;
+            set(crossedStopsRef, {
+              list: updated,
+              manitGateCrossed: true,
+            });
+            approachingStopRef.current = null;
+          }
+        });
+
+        router.addTo(mapRef.current);
+        setTimeout(() => mapRef.current.removeControl(router), 3000);
       }
-    } catch (error) {
-      console.error("Error fetching bus locations:", error);
-    }
-  };
-  
-
-  // Fetch User Location from Telegram Bot
-  const fetchUserLocation = async () => {
-    try {
-      let lastUpdateId = 0;
-      const response = await fetch(
-        `https://api.telegram.org/bot${userBotToken}/getUpdates?offset=${lastUpdateId + 1}`
-      );
-      const data = await response.json();
-  
-      if (Array.isArray(data.result) && data.result.length > 0) {
-        const lastUpdate = data.result[data.result.length - 1];
-        lastUpdateId = lastUpdate.update_id;
-  
-        const location = lastUpdate.message?.location;
-        if (location) {
-          setUserPosition({ lat: location.latitude, lng: location.longitude });
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching user location:", error);
-    }
-  };
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchBusLocations();
-      fetchUserLocation();
-    }, 10000); 
-  
-    return () => clearInterval(interval);
-  }, []);  // Empty dependency array ensures proper periodic updates
-  
-// new update likra hu yaad se 
-useEffect(() => {
-  if (!userPosition || Object.keys(busPositions).length === 0) return;
-
-  const updatedDistances = {};
-  Object.entries(busPositions).forEach(([busId, position]) => {
-    const distance = calculateDistance(
-      userPosition.lat, userPosition.lng, 
-      position.lat, position.lng
-    );
-    updatedDistances[busId] = { distance: distance.toFixed(2) }; // Fix structure
-  });
-
-  console.log("📏 Updated Distance Info (Before SetState):", updatedDistances);
- // setDistanceInfo(updatedDistances);//ye mara hai update niche 
- setDistanceInfo(updatedDistances);
-
-
-}, [busPositions, userPosition]); 
-// Runs when user or bus position updates
-console.log("👤 User Position:", userPosition);
-console.log("🚌 Bus Positions:", busPositions);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        console.log("🚀 Fetching Bus Locations...");
-        await fetchBusLocations();
-        console.log("✅ Bus Locations Updated Successfully!");
-        
-        // Log the latest bus positions
-        setTimeout(() => {
-          console.log("🚌 Current Bus Positions State:", busPositions);
-        }, 900000);
-        
-      } catch (error) {
-        console.error("🚨 Error in useEffect:", error);
-      }
-    };
-  
-    fetchData();
-    const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
-  }, [busPositions]);  // Ensure it re-runs when bus positions change
- 
-  useEffect(() => {
-    if (!mapRef.current || !busPositions) return;
-  
-    // Remove previous markers (if necessary)
-    if (routingControlRef.current) {
-      mapRef.current.removeLayer(routingControlRef.current);
-    }
-  
-    // Add new markers
-    Object.entries(busPositions).forEach(([busId, position]) => {
-      L.marker([position.lat, position.lng])
-        .addTo(mapRef.current)
-        .bindPopup(`Bus ID: ${busId}`);
     });
-  
-  }, [busPositions]); // Runs when bus positions change
-  
-  // ye naya change hai line ko add krne ka
-  ///useEffect(() => {
-  //  if (userPosition && Object.keys(busPositions).length > 0) {
-   //   for (const busNumber in busPositions) {
-    //    addRouting(userPosition, busPositions[busNumber], busNumber);
-    ///  }
-   // }
- // }, [busPositions, userPosition]);//
- useEffect(() => {
-  if (userPosition && Object.keys(busPositions).length > 0) {
-    Object.entries(busPositions).forEach(([busNumber, position]) => {
-      addRouting(userPosition, position, busNumber);
-    });
-  }
-}, [busPositions, userPosition]);
+
+    return () => unsubscribe();
+  }, [selectedBus, crossedStops, reverse]);
+
+  const handleResetStops = async () => {
+    await remove(crossedStopsRef);
+    setCrossedStops([]);
+    currentStopIndexRef.current = 0;
+    manitGateCrossedRef.current = false;
+    approachingStopRef.current = null;
+    setNextStop(null);
+    setEtaToNext(null);
+    setDistanceToNext(null);
+    fetchCrossed();
+  };
 
   return (
-    <div className="relative w-full h-screen">
-      <h1 className="text-2xl font-bold text-yellow-400 my-4 text-center">
-        🚍 Real-Time Bus & User Tracking with Telegram Bots
-      </h1>
+    <div>
+      <div style={{ padding: "10px" }}>
+        <button onClick={() => setSelectedBus("101")}>Bus 101</button>
+        <button onClick={() => setSelectedBus("102")}>Bus 102</button>
+        <button onClick={handleResetStops} style={{ marginLeft: "10px", backgroundColor: "red", color: "white" }}>
+          Reset Stops
+        </button>
+        <label style={{ marginLeft: "20px" }}>
+          <input type="checkbox" checked={reverse} onChange={(e) => setReverse(e.target.checked)} />
+          Reverse Route
+        </label>
+      </div>
 
-      <MapContainer
-        center={[23.2599, 77.4126]}
-        zoom={14}
-        style={{ height: "85vh", width: "100%" }}
-        whenCreated={(mapInstance) => {
-          mapRef.current = mapInstance;
-          L.control.scale().addTo(mapInstance);
-        }}
-      >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <div id="map" style={{ height: "75vh", width: "100%" }}></div>
 
-        {Object.entries(busPositions).map(([busNumber, pos], index) => (
-          <Marker key={`${busNumber}-${pos.lat}-${pos.lng}`} position={[pos.lat, pos.lng]}>
-
-    <Popup>
-      <b>🚌 Bus {busNumber}</b><br />
-      {distanceInfo[busNumber] && distanceInfo[busNumber].distance ? (
-        <>
-          <p>📏 Distance from You: <b>{distanceInfo[busNumber].distance} km</b></p>
-          <p>⏱️ Estimated Time: <b>{distanceInfo[busNumber].duration || "Calculating..."} min</b></p>
-        </>
-      ) : (
-        <p>📍 Distance Data Not Available</p>
-      )}
-    </Popup>
-  </Marker>
-))}
-
-
-
-        {userPosition && (
-          <Marker position={[userPosition.lat, userPosition.lng]}>
-            <Popup>
-              <b>📍 Your Location</b>
-            </Popup>
-          </Marker>
-        )}
-      </MapContainer>
+      <BottomSheet
+        selectedBus={selectedBus}
+        stops={stops}
+        crossedStops={crossedStops}
+        nextStop={nextStop}
+        etaToNext={etaToNext}
+        distanceToNext={distanceToNext}
+      />
     </div>
   );
 };
